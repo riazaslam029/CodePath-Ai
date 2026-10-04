@@ -12,47 +12,48 @@ export default function FeatureTraceCard({
   if (!flow || flow.length === 0) return null;
 
   return (
-    <div className="my-3 p-3.5 rounded-xl bg-[#0e1627] border border-indigo-500/30 shadow-lg shadow-indigo-950/20 text-left">
-      <div className="flex items-center justify-between mb-3">
+    <div className="my-2.5 p-3 rounded-lg bg-[#0e131d] border border-[#1e2738] shadow-lg text-left font-sans">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 border-b border-[#1a2232] pb-2.5">
         <div className="flex items-center space-x-2">
-          <div className="p-1 rounded bg-indigo-500/20 text-indigo-400">
-            <Route className="w-4 h-4" />
+          <div className="p-1 rounded bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+            <Route className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-indigo-200 uppercase tracking-wider font-mono">
+            <h4 className="text-[11px] font-semibold text-[#f1f5f9] uppercase tracking-wider font-mono">
               Feature Execution Path
             </h4>
-            <span className="text-[10px] text-slate-400 font-mono">
-              {flow.length} connected system modules
+            <span className="text-[10px] text-[#64748b] font-mono">
+              {flow.length} files &middot; {Math.max(1, flow.length - 1)} transitions &middot; High Confidence
             </span>
           </div>
         </div>
 
-        {/* Primary Action Button */}
+        {/* Action Button */}
         <button
           onClick={onTraceClick}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium font-mono transition-all duration-200 shadow-md ${
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium transition-colors cursor-pointer ${
             isCurrentlyTraced
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/50'
-              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/50 hover:scale-105 active:scale-95'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm'
           }`}
         >
           {isCurrentlyTraced ? (
             <>
               <Check className="w-3.5 h-3.5 text-white" />
-              <span>Path Active</span>
+              <span>Trace Active</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              <span>Trace This Feature</span>
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>Trace Path</span>
             </>
           )}
         </button>
       </div>
 
-      {/* Sequential Flow Steps */}
-      <div className="space-y-1.5">
+      {/* Steps List */}
+      <div className="space-y-1">
         {flow.map((filePath, index) => {
           const stepInfo = traceSteps?.find((s) => s.file === filePath) || {
             step: index + 1,
@@ -67,33 +68,33 @@ export default function FeatureTraceCard({
             <div key={`${filePath}-${index}`} className="group">
               <div
                 onClick={() => onSelectStepFile && onSelectStepFile(filePath)}
-                className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-850 cursor-pointer transition-colors"
+                className="flex items-center justify-between p-1.5 rounded-md bg-[#121824] border border-[#1a2336] hover:border-indigo-500/40 cursor-pointer transition-colors"
               >
-                <div className="flex items-center space-x-2.5 truncate">
-                  <div className="w-5 h-5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300 text-[10px] font-mono flex items-center justify-center font-bold">
+                <div className="flex items-center space-x-2 truncate">
+                  <div className="w-4 h-4 rounded bg-[#1a2336] text-indigo-300 text-[10px] font-mono flex items-center justify-center font-bold">
                     {index + 1}
                   </div>
                   <div className="truncate">
-                    <div className="text-xs font-semibold text-slate-200 font-mono truncate">
+                    <span className="text-xs font-semibold text-[#f1f5f9] font-mono truncate mr-2">
                       {stepInfo.label || filePath.split('/').pop()}
-                    </div>
+                    </span>
                     {stepInfo.role && (
-                      <div className="text-[10px] text-slate-400 truncate">
-                        {stepInfo.role}
-                      </div>
+                      <span className="text-[10px] text-[#94a3b8] font-mono">
+                        ({stepInfo.role})
+                      </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Eye className="w-3 h-3 text-indigo-400" />
                   <span className="text-[10px] text-indigo-300 font-mono">Inspect</span>
                 </div>
               </div>
 
               {!isLast && (
                 <div className="flex justify-center my-0.5">
-                  <ArrowDown className="w-3 h-3 text-indigo-400/60" />
+                  <ArrowDown className="w-2.5 h-2.5 text-[#64748b]" />
                 </div>
               )}
             </div>

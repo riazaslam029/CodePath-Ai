@@ -11,7 +11,8 @@ import {
   Database,
   Cpu,
   ShieldCheck,
-  FileText
+  FileText,
+  X
 } from 'lucide-react';
 import Badge from '../UI/Badge';
 
@@ -68,27 +69,27 @@ function TreeNode({ item, level = 0, selectedNodeId, onSelectFile }) {
     });
 
     return (
-      <div>
+      <div className="relative">
         <div
           onClick={() => setIsOpen(!isOpen)}
-          style={{ paddingLeft: `${level * 14 + 10}px` }}
-          className="flex items-center space-x-1.5 py-1.5 px-2 hover:bg-slate-800/50 cursor-pointer text-slate-300 text-xs font-mono transition-colors group select-none"
+          style={{ paddingLeft: `${level * 12 + 8}px` }}
+          className="flex items-center space-x-1.5 py-1 px-2 hover:bg-[#131926] cursor-pointer text-[#94a3b8] hover:text-[#f1f5f9] text-xs font-mono transition-colors group select-none rounded"
         >
           {isOpen ? (
-            <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#64748b] group-hover:text-[#94a3b8]" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300" />
+            <ChevronRight className="w-3.5 h-3.5 text-[#64748b] group-hover:text-[#94a3b8]" />
           )}
           {isOpen ? (
-            <FolderOpen className="w-4 h-4 text-sky-400/90" />
+            <FolderOpen className="w-3.5 h-3.5 text-sky-400/90" />
           ) : (
-            <Folder className="w-4 h-4 text-sky-500/80" />
+            <Folder className="w-3.5 h-3.5 text-sky-500/80" />
           )}
-          <span className="font-medium text-slate-200">{item.name}</span>
+          <span className="font-medium text-[#cbd5e1]">{item.name}</span>
         </div>
 
         {isOpen && (
-          <div>
+          <div className="relative ml-2 pl-1 border-l border-[#1a2336]/60">
             {sortedChildren.map((child) => (
               <TreeNode
                 key={child.name}
@@ -111,18 +112,18 @@ function TreeNode({ item, level = 0, selectedNodeId, onSelectFile }) {
   return (
     <div
       onClick={() => onSelectFile(node)}
-      style={{ paddingLeft: `${level * 14 + 18}px` }}
-      className={`flex items-center justify-between py-1.5 px-2 text-xs font-mono cursor-pointer transition-all select-none border-l-2 ${
+      style={{ paddingLeft: `${level * 12 + 12}px` }}
+      className={`flex items-center justify-between py-1 px-2 text-xs font-mono cursor-pointer transition-colors select-none rounded mx-1 ${
         isSelected
-          ? 'bg-indigo-950/60 border-indigo-500 text-indigo-200 font-semibold shadow-inner'
-          : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+          ? 'bg-indigo-600/20 text-indigo-200 font-medium border border-indigo-500/40'
+          : 'text-[#94a3b8] hover:text-[#f8fafc] hover:bg-[#131926] border border-transparent'
       }`}
     >
       <div className="flex items-center space-x-2 truncate">
-        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`} />
+        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-indigo-400' : 'text-[#64748b]'}`} />
         <span className="truncate">{node.label}</span>
       </div>
-      <Badge type={node.type} className="text-[9px] py-0 px-1 opacity-80" />
+      <Badge type={node.type} className="text-[9px] py-0 px-1 opacity-75" />
     </div>
   );
 }
@@ -146,33 +147,41 @@ export default function FileTree({
   const tree = useMemo(() => buildFileTree(filteredNodes), [filteredNodes]);
 
   return (
-    <div className="h-full flex flex-col bg-[#0b101d] border-r border-slate-800/80 select-none">
-      {/* Sidebar Header */}
-      <div className="p-3 border-b border-slate-800/80">
+    <div className="h-full flex flex-col bg-[#0b0f17] border-r border-[#1a2232] select-none font-sans">
+      {/* Header */}
+      <div className="p-3 border-b border-[#1a2232]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+          <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider font-mono">
             Files & Modules
           </span>
-          <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#131823] text-[#94a3b8] font-mono border border-[#1e2738]">
             {nodes.length}
           </span>
         </div>
 
-        {/* Search input */}
+        {/* Search Input */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-[#64748b] absolute left-2.5 top-2.5" />
           <input
             type="text"
             placeholder="Filter files..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-2.5 py-1.5 bg-[#080c14] border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/70"
+            className="w-full pl-8 pr-7 py-1.5 bg-[#0e131d] border border-[#1e2738] rounded-md text-xs text-[#f1f5f9] placeholder-[#64748b] font-mono focus:outline-none focus:border-indigo-500/70"
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-2 text-[#64748b] hover:text-[#cbd5e1]"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Hierarchical Tree Body */}
-      <div className="flex-1 overflow-y-auto py-2">
+      {/* Tree Body */}
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
         {Object.values(tree.children).length > 0 ? (
           Object.values(tree.children).map((rootItem) => (
             <TreeNode
@@ -184,7 +193,7 @@ export default function FileTree({
             />
           ))
         ) : (
-          <div className="p-4 text-center text-xs text-slate-500">
+          <div className="p-6 text-center text-xs text-[#64748b] font-mono">
             No matching files found.
           </div>
         )}

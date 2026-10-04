@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import {
   FileCode,
-  Layers,
   ArrowRight,
   ShieldAlert,
   Code2,
-  Box,
   Copy,
   Check,
   X,
   ExternalLink,
-  Loader2
+  Loader2,
+  Route
 } from 'lucide-react';
 import Badge from '../UI/Badge';
 import ImpactAnalysisModal from './ImpactAnalysisModal';
@@ -20,7 +19,8 @@ export default function InspectorPanel({
   fileNode,
   onClose,
   onSelectNodeById,
-  allEdges = []
+  allEdges = [],
+  onTraceFileFlow
 }) {
   const [copied, setCopied] = useState(false);
   const [isImpactLoading, setIsImpactLoading] = useState(false);
@@ -29,13 +29,13 @@ export default function InspectorPanel({
 
   if (!fileNode) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-[#0b101d] border-l border-slate-800/80">
-        <Box className="w-10 h-10 mb-3 text-slate-700" />
-        <h4 className="text-xs font-semibold text-slate-400 font-mono uppercase tracking-wider">
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[#64748b] bg-[#0b0f17] border-l border-[#1a2232] font-sans">
+        <FileCode className="w-8 h-8 mb-2 text-[#334155]" />
+        <h4 className="text-xs font-semibold text-[#94a3b8] font-mono uppercase tracking-wider">
           No File Selected
         </h4>
-        <p className="text-xs text-slate-500 mt-1 max-w-xs">
-          Click any file node in the interactive graph or repository tree to inspect its architectural role.
+        <p className="text-[11px] text-[#64748b] mt-1 max-w-xs font-mono">
+          Click any node in the graph or file tree to inspect its architectural role.
         </p>
       </div>
     );
@@ -71,25 +71,25 @@ export default function InspectorPanel({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0b101d] border-l border-slate-800/80 overflow-y-auto">
+    <div className="h-full flex flex-col bg-[#0b0f17] border-l border-[#1a2232] overflow-y-auto font-sans">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800/80 sticky top-0 bg-[#0b101d]/95 backdrop-blur-md z-10">
+      <div className="p-3 border-b border-[#1a2232] bg-[#0e121a] sticky top-0 z-10">
         <div className="flex items-start justify-between">
           <div className="truncate mr-2">
-            <div className="flex items-center space-x-2 mb-1">
-              <Badge type={fileNode.type}>{fileNode.type}</Badge>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">
+            <div className="flex items-center space-x-1.5 mb-1">
+              <Badge type={fileNode.type} className="text-[9px] py-0 px-1">{fileNode.type}</Badge>
+              <span className="text-[10px] font-mono text-[#64748b] uppercase">
                 {fileNode.language}
               </span>
             </div>
-            <h3 className="text-sm font-bold text-slate-100 font-mono truncate" title={fileNode.label}>
+            <h3 className="text-sm font-bold text-[#f1f5f9] font-mono truncate" title={fileNode.label}>
               {fileNode.label}
             </h3>
-            <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-slate-400 font-mono truncate">
+            <div className="flex items-center space-x-1 mt-0.5 text-[11px] text-[#64748b] font-mono truncate">
               <span className="truncate max-w-[200px]" title={fileNode.path}>{fileNode.path}</span>
               <button
                 onClick={handleCopyPath}
-                className="text-slate-500 hover:text-slate-300 p-0.5 rounded transition-colors"
+                className="text-[#64748b] hover:text-[#cbd5e1] p-0.5 rounded transition-colors"
                 title="Copy relative path"
               >
                 {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -99,54 +99,54 @@ export default function InspectorPanel({
 
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+            className="p-1 rounded text-[#64748b] hover:text-[#cbd5e1] hover:bg-[#1a2336] transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Impact Analysis Action Button */}
-        <div className="mt-3.5">
+        {/* Primary Action: Impact Analysis */}
+        <div className="mt-2.5">
           <button
             onClick={handleRunImpactAnalysis}
             disabled={isImpactLoading}
-            className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-mono font-medium flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            className="w-full py-1.5 px-2.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-mono font-medium flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
           >
             {isImpactLoading ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             )}
-            <span>Analyze Impact & Blast Radius</span>
+            <span>Analyze Blast Radius</span>
           </button>
         </div>
       </div>
 
-      <div className="p-4 space-y-5">
-        {/* Architectural Role */}
+      <div className="p-3 space-y-4">
+        {/* Role & Summary */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider font-mono text-slate-500 block mb-1">
+          <span className="text-[10px] uppercase tracking-wider font-mono text-[#64748b] block mb-1">
             Architectural Role
           </span>
-          <p className="text-xs font-medium text-slate-200">
+          <p className="text-xs font-medium text-[#f1f5f9]">
             {fileNode.role || 'Source module in application layer.'}
           </p>
           {fileNode.summary && (
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            <p className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
               {fileNode.summary}
             </p>
           )}
         </div>
 
-        {/* Stats */}
+        {/* Technical Metrics */}
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-          <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-            <span className="text-[10px] text-slate-500 block">Lines of Code</span>
-            <span className="text-slate-200 font-semibold">{fileNode.lines || 0}</span>
+          <div className="p-2 rounded bg-[#0e131d] border border-[#1a2336]">
+            <span className="text-[10px] text-[#64748b] block">Lines of Code</span>
+            <span className="text-[#f1f5f9] font-semibold">{fileNode.lines || 0}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-            <span className="text-[10px] text-slate-500 block">File Size</span>
-            <span className="text-slate-200 font-semibold">
+          <div className="p-2 rounded bg-[#0e131d] border border-[#1a2336]">
+            <span className="text-[10px] text-[#64748b] block">File Size</span>
+            <span className="text-[#f1f5f9] font-semibold">
               {Math.round((fileNode.size || 0) / 1024 * 10) / 10} KB
             </span>
           </div>
@@ -155,14 +155,14 @@ export default function InspectorPanel({
         {/* Functions & Classes */}
         {(fileNode.functions?.length > 0 || fileNode.classes?.length > 0) && (
           <div>
-            <span className="text-[10px] uppercase tracking-wider font-mono text-slate-500 block mb-2">
-              Symbols & Declarations
+            <span className="text-[10px] uppercase tracking-wider font-mono text-[#64748b] block mb-1.5">
+              Extracted Symbols
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {fileNode.classes?.map((cls) => (
                 <span
                   key={cls}
-                  className="px-2 py-0.5 rounded bg-amber-950/40 text-amber-300 border border-amber-800/50 text-[11px] font-mono"
+                  className="px-1.5 py-0.5 rounded bg-amber-950/40 text-amber-300 border border-amber-800/40 text-[10px] font-mono"
                 >
                   class {cls}
                 </span>
@@ -170,7 +170,7 @@ export default function InspectorPanel({
               {fileNode.functions?.map((fn) => (
                 <span
                   key={fn}
-                  className="px-2 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-800/50 text-[11px] font-mono"
+                  className="px-1.5 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-800/40 text-[10px] font-mono"
                 >
                   {fn}()
                 </span>
@@ -179,10 +179,10 @@ export default function InspectorPanel({
           </div>
         )}
 
-        {/* Dependencies (Outbound) */}
+        {/* Outbound Dependencies */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider font-mono text-slate-500 block mb-1.5">
-            Dependencies ({directDependencies.length})
+          <span className="text-[10px] uppercase tracking-wider font-mono text-[#64748b] block mb-1">
+            Depends On ({directDependencies.length})
           </span>
           {directDependencies.length > 0 ? (
             <div className="space-y-1">
@@ -190,22 +190,22 @@ export default function InspectorPanel({
                 <div
                   key={dep}
                   onClick={() => onSelectNodeById && onSelectNodeById(dep)}
-                  className="flex items-center justify-between p-1.5 rounded bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 text-xs font-mono text-slate-300 hover:text-indigo-300 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-1.5 rounded bg-[#0e131d] border border-[#1a2336] hover:border-indigo-500/40 text-xs font-mono text-[#cbd5e1] hover:text-indigo-300 cursor-pointer transition-colors"
                 >
                   <span className="truncate">{dep.split('/').pop()}</span>
-                  <ExternalLink className="w-3 h-3 text-slate-500 flex-shrink-0 ml-1" />
+                  <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0 ml-1" />
                 </div>
               ))}
             </div>
           ) : (
-            <span className="text-xs text-slate-500 italic">No internal repository dependencies.</span>
+            <span className="text-[11px] text-[#64748b] font-mono italic">No internal repository dependencies.</span>
           )}
         </div>
 
-        {/* Dependents (Inbound Callers) */}
+        {/* Inbound Callers (Dependents) */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider font-mono text-slate-500 block mb-1.5">
-            Dependents / Callers ({directDependents.length})
+          <span className="text-[10px] uppercase tracking-wider font-mono text-[#64748b] block mb-1">
+            Used By ({directDependents.length})
           </span>
           {directDependents.length > 0 ? (
             <div className="space-y-1">
@@ -213,25 +213,25 @@ export default function InspectorPanel({
                 <div
                   key={dep}
                   onClick={() => onSelectNodeById && onSelectNodeById(dep)}
-                  className="flex items-center justify-between p-1.5 rounded bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 text-xs font-mono text-slate-300 hover:text-indigo-300 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-1.5 rounded bg-[#0e131d] border border-[#1a2336] hover:border-indigo-500/40 text-xs font-mono text-[#cbd5e1] hover:text-indigo-300 cursor-pointer transition-colors"
                 >
                   <span className="truncate">{dep.split('/').pop()}</span>
-                  <ExternalLink className="w-3 h-3 text-slate-500 flex-shrink-0 ml-1" />
+                  <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0 ml-1" />
                 </div>
               ))}
             </div>
           ) : (
-            <span className="text-xs text-slate-500 italic">No incoming callers detected.</span>
+            <span className="text-[11px] text-[#64748b] font-mono italic">No incoming callers detected.</span>
           )}
         </div>
 
-        {/* Code Preview */}
+        {/* Source Code Preview */}
         {fileNode.code_preview && (
           <div>
-            <span className="text-[10px] uppercase tracking-wider font-mono text-slate-500 block mb-1.5">
+            <span className="text-[10px] uppercase tracking-wider font-mono text-[#64748b] block mb-1">
               Source Code Preview
             </span>
-            <div className="p-3 rounded-xl bg-[#070b13] border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto max-h-56">
+            <div className="p-2.5 rounded-lg bg-[#070a10] border border-[#1a2336] text-[11px] font-mono text-[#cbd5e1] overflow-x-auto max-h-52">
               <pre className="whitespace-pre">{fileNode.code_preview}</pre>
             </div>
           </div>

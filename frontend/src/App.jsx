@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import AnalysisProgressModal from './components/UI/AnalysisProgressModal';
 import RepoInputModal from './components/UI/RepoInputModal';
+import CommandPalette from './components/UI/CommandPalette';
 import { analyzeRepository, getDemoRepository } from './services/api';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, RotateCcw } from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState('landing'); // 'landing' | 'dashboard'
@@ -13,15 +14,24 @@ export default function App() {
   const [repoUrl, setRepoUrl] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
 
-  // Analysis state
+  // Modal and operation states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
   const [targetRepoName, setTargetRepoName] = useState('');
   const [isAnalyzeModalOpen, setIsAnalyzeModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Load demo repository in background so it is instantly ready
+  // Expose command palette opener globally
+  useEffect(() => {
+    window.__openCommandPalette = () => setIsCommandPaletteOpen(true);
+    return () => {
+      delete window.__openCommandPalette;
+    };
+  }, []);
+
+  // Preload demo repository
   useEffect(() => {
     getDemoRepository()
       .then((data) => {
@@ -33,8 +43,8 @@ export default function App() {
       });
   }, []);
 
-  const handleLaunchDemo = async () => {
-    setTargetRepoName('Bundled Cloud App Demo');
+  const handleLaunchDemo = useCallback(async () => {
+    setTargetRepoName('Bundled Demo Codebase');
     setIsProgressModalOpen(true);
     setIsAnalyzing(true);
     setIsAnalysisComplete(false);
@@ -52,9 +62,9 @@ export default function App() {
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, []);
 
-  const handleAnalyzeRepo = async (url) => {
+  const handleAnalyzeRepo = useCallback(async (url) => {
     setTargetRepoName(url);
     setIsProgressModalOpen(true);
     setIsAnalyzing(true);
@@ -69,21 +79,26 @@ export default function App() {
       setIsAnalysisComplete(true);
     } catch (err) {
       setErrorMessage(
-        err.message || 'We couldn\'t analyze this repository. Make sure it is public and contains supported source files.'
+        err.message ||
+          'We could not analyze this repository. Make sure it is public and contains supported Python or JS/TS source files.'
       );
       setIsProgressModalOpen(false);
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, []);
 
   const handleFinishAnalysis = () => {
     setIsProgressModalOpen(false);
     setView('dashboard');
   };
 
+  const handleResetGraph = () => {
+    setView('dashboard');
+  };
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#080c14] text-slate-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090b10] text-[#f8fafc] font-sans">
       {/* Top Navigation */}
       <Navbar
         currentView={view}
@@ -91,22 +106,31 @@ export default function App() {
         activeRepo={graphData}
         onOpenAnalyzeModal={() => setIsAnalyzeModalOpen(true)}
         onLoadDemo={handleLaunchDemo}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isAnalyzing={isAnalyzing}
       />
 
-      {/* Error banner if an operation failed */}
+      {/* Engineered Error Banner */}
       {errorMessage && (
-        <div className="bg-rose-950/90 border-b border-rose-800/80 px-4 py-2 flex items-center justify-between text-xs text-rose-200 z-40">
+        <div className="bg-[#181016] border-b border-rose-900/60 px-4 py-2 flex items-center justify-between text-xs text-rose-300 font-mono z-40">
           <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <AlertCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
             <span>{errorMessage}</span>
           </div>
-          <button
-            onClick={() => setErrorMessage(null)}
-            className="p-1 hover:bg-rose-900 rounded text-rose-400 hover:text-rose-100 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleLaunchDemo()}
+              className="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800/80 hover:bg-rose-900 text-rose-200 transition-colors"
+            >
+              Try Demo Instead
+            </button>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="p-0.5 hover:bg-rose-900/60 rounded text-rose-400 hover:text-rose-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -128,7 +152,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Analysis Progress Overlay */}
+      {/* Terminal Analysis Progress Modal */}
       <AnalysisProgressModal
         isOpen={isProgressModalOpen}
         targetRepo={targetRepoName}
@@ -136,12 +160,28 @@ export default function App() {
         onFinish={handleFinishAnalysis}
       />
 
-      {/* Analyze Repo Input Modal */}
+      {/* Connect Repo Modal */}
       <RepoInputModal
         isOpen={isAnalyzeModalOpen}
         onClose={() => setIsAnalyzeModalOpen(false)}
         onAnalyze={handleAnalyzeRepo}
         onUseDemo={handleLaunchDemo}
+      />
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        nodes={graphData?.nodes || []}
+        onSelectNode={(node) => {
+          setView('dashboard');
+        }}
+        onTraceFlow={(flow) => {
+          setView('dashboard');
+        }}
+        onOpenAnalyzeModal={() => setIsAnalyzeModalOpen(true)}
+        onLoadDemo={handleLaunchDemo}
+        onResetGraph={handleResetGraph}
       />
     </div>
   );

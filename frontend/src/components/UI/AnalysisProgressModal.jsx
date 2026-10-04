@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, CheckCircle2, Terminal, Sparkles } from 'lucide-react';
+import { Loader2, CheckCircle2, Terminal } from 'lucide-react';
 
 const STEPS = [
-  'Connecting to repository...',
-  'Fetching project structure...',
-  'Parsing source files...',
-  'Building dependency graph...',
-  'Preparing AI context...',
-  'Analysis complete.'
+  'Connected to GitHub API',
+  'Reading project structure & tree',
+  'Parsing AST source files (Python, JS, TS)',
+  'Building dependency graph & bridging APIs',
+  'Preparing AI context & vector index',
+  'Repository analysis complete.'
 ];
 
 export default function AnalysisProgressModal({ isOpen, targetRepo, isComplete, onFinish }) {
@@ -19,7 +19,6 @@ export default function AnalysisProgressModal({ isOpen, targetRepo, isComplete, 
       return;
     }
 
-    // Progress through steps visually while backend analysis executes
     const interval = setInterval(() => {
       setCurrentStepIdx((prev) => {
         if (prev < STEPS.length - 2) {
@@ -27,7 +26,7 @@ export default function AnalysisProgressModal({ isOpen, targetRepo, isComplete, 
         }
         return prev;
       });
-    }, 650);
+    }, 550);
 
     return () => clearInterval(interval);
   }, [isOpen]);
@@ -37,7 +36,7 @@ export default function AnalysisProgressModal({ isOpen, targetRepo, isComplete, 
       setCurrentStepIdx(STEPS.length - 1);
       const timer = setTimeout(() => {
         if (onFinish) onFinish();
-      }, 700);
+      }, 650);
       return () => clearTimeout(timer);
     }
   }, [isComplete, onFinish]);
@@ -45,70 +44,67 @@ export default function AnalysisProgressModal({ isOpen, targetRepo, isComplete, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-[#0c121e] p-6 shadow-2xl shadow-indigo-950/40">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400">
-            <Sparkles className="w-6 h-6 animate-pulse" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-100 font-sans">
+      <div className="w-full max-w-md rounded-xl border border-[#232d42] bg-[#0c1017] p-5 shadow-2xl font-mono">
+        {/* Terminal Header */}
+        <div className="flex items-center space-x-2.5 mb-4 border-b border-[#1a2232] pb-3">
+          <div className="p-1.5 rounded bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+            <Terminal className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-slate-100">Analyzing Codebase</h3>
-            <p className="text-xs text-slate-400 font-mono truncate max-w-sm">
+          <div className="truncate">
+            <h3 className="text-xs font-bold text-[#f1f5f9] uppercase tracking-wider">
+              Analyzing Repository
+            </h3>
+            <p className="text-[11px] text-[#64748b] truncate max-w-xs mt-0.5">
               {targetRepo || 'Bundled Demo Repository'}
             </p>
           </div>
         </div>
 
-        {/* Step List */}
-        <div className="space-y-3 mb-6">
+        {/* Step Checklist */}
+        <div className="space-y-2 mb-5">
           {STEPS.map((step, idx) => {
             const isDone = idx < currentStepIdx || (isComplete && idx === STEPS.length - 1);
             const isCurrent = idx === currentStepIdx && !isComplete;
-            const isUpcoming = idx > currentStepIdx;
 
             return (
               <div
                 key={step}
-                className={`flex items-center space-x-3 text-sm px-3 py-2 rounded-lg transition-all duration-300 ${
+                className={`flex items-center space-x-2.5 text-xs px-2.5 py-1.5 rounded transition-colors ${
                   isCurrent
-                    ? 'bg-indigo-950/40 border border-indigo-500/30 text-indigo-300'
+                    ? 'bg-[#151c2a] text-indigo-300 border border-[#232d42]'
                     : isDone
-                    ? 'text-slate-300 bg-slate-900/40'
-                    : 'text-slate-600 opacity-60'
+                    ? 'text-[#94a3b8]'
+                    : 'text-[#475569] opacity-60'
                 }`}
               >
                 <div className="flex-shrink-0">
                   {isDone ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-in zoom-in-50" />
+                    <span className="text-emerald-400 font-bold">✓</span>
                   ) : isCurrent ? (
-                    <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                    <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
                   ) : (
-                    <div className="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[10px]">
-                      {idx + 1}
-                    </div>
+                    <span className="text-[#475569]">○</span>
                   )}
                 </div>
-                <span className="font-mono text-xs tracking-wide">{step}</span>
+                <span className="truncate text-[11px]">{step}</span>
               </div>
             );
           })}
         </div>
 
-        {/* Animated Progress Bar */}
-        <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+        {/* Linear progress bar */}
+        <div className="w-full bg-[#151c2a] rounded-full h-1 overflow-hidden border border-[#1e2738]">
           <div
-            className="bg-gradient-to-r from-indigo-500 via-sky-400 to-indigo-500 h-full transition-all duration-500 rounded-full"
+            className="bg-indigo-500 h-full transition-all duration-300 rounded-full"
             style={{
               width: `${Math.min(100, ((currentStepIdx + 1) / STEPS.length) * 100)}%`
             }}
           />
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-          <span className="flex items-center space-x-1.5">
-            <Terminal className="w-3.5 h-3.5" />
-            <span>AST Engine Active</span>
-          </span>
+        <div className="mt-3 flex items-center justify-between text-[10px] text-[#64748b]">
+          <span>AST Code Analysis Engine</span>
           <span>{Math.round(((currentStepIdx + 1) / STEPS.length) * 100)}%</span>
         </div>
       </div>

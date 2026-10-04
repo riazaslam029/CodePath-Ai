@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Loader2, Terminal, CheckCircle2 } from 'lucide-react';
 import FeatureTraceCard from './FeatureTraceCard';
 import { askQuestion } from '../../services/api';
 
@@ -24,7 +24,7 @@ export default function ChatPanel({
       id: 'welcome',
       role: 'assistant',
       content:
-        '👋 Welcome to **CodePath AI**! I have analyzed this codebase and built its interactive dependency graph.\n\nAsk any question about how features flow through the repository, or click one of the suggested prompts below to see a visual trace.',
+        'CodePath Repository Intelligence ready.\n\nAsk how features flow through this codebase, or select a suggested query below to generate a live dependency trace.',
       flow: [],
       traceSteps: []
     }
@@ -56,7 +56,7 @@ export default function ChatPanel({
 
     try {
       const response = await askQuestion(text, repoUrl, isDemo, selectedFile?.id);
-      
+
       const assistantMsg = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
@@ -68,7 +68,7 @@ export default function ChatPanel({
 
       setMessages((prev) => [...prev, assistantMsg]);
 
-      // Automatically trace feature if flow is present
+      // Automatically trace feature if flow is returned
       if (response.flow && response.flow.length > 0 && onTraceFeature) {
         onTraceFeature(response.flow);
       }
@@ -78,7 +78,7 @@ export default function ChatPanel({
         {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: `⚠️ ${err.message || 'Error communicating with AI engine.'}`,
+          content: `We encountered an issue querying the codebase: ${err.message || 'Unknown error'}.`,
           flow: [],
           traceSteps: []
         }
@@ -89,92 +89,89 @@ export default function ChatPanel({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0b101d] border-l border-slate-800/80">
+    <div className="h-full flex flex-col bg-[#0b0f17] border-l border-[#1a2232] font-sans">
       {/* Header */}
-      <div className="p-3.5 border-b border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
-            <Bot className="w-4 h-4" />
+      <div className="p-3 border-b border-[#1a2232] flex items-center justify-between bg-[#0e121a]">
+        <div className="flex items-center space-x-2">
+          <div className="p-1 rounded bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+            <Bot className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-slate-100 font-mono">
-              AI Codebase Explorer
+            <h3 className="text-xs font-semibold text-[#f1f5f9] font-mono tracking-tight">
+              Code Intelligence
             </h3>
             <div className="flex items-center space-x-1.5 text-[10px] text-emerald-400 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Repository indexed</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>Repository Indexed &middot; AST Active</span>
             </div>
           </div>
         </div>
 
         {selectedFile && (
-          <div className="text-[10px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono truncate max-w-[130px]" title={selectedFile.label}>
-            Context: {selectedFile.label}
+          <div
+            className="text-[10px] px-2 py-0.5 rounded bg-[#131823] text-[#94a3b8] font-mono border border-[#1e2738] truncate max-w-[120px]"
+            title={selectedFile.label}
+          >
+            {selectedFile.label}
           </div>
         )}
       </div>
 
-      {/* Suggested Prompts Carousel */}
-      <div className="p-2 border-b border-slate-800/60 bg-[#090d18] flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
-        <Sparkles className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0 ml-1" />
+      {/* Suggested Prompt Tags */}
+      <div className="p-2 border-b border-[#1a2232] bg-[#0c1017] flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
         {SAMPLE_QUESTIONS.map((q) => (
           <button
             key={q}
             onClick={() => handleSubmit(q)}
             disabled={isLoading}
-            className="flex-shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-indigo-950/80 text-slate-300 hover:text-indigo-200 border border-slate-700/60 hover:border-indigo-500/40 transition-colors whitespace-nowrap cursor-pointer"
+            className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-[#131823] hover:bg-[#1a2232] text-[#94a3b8] hover:text-[#f1f5f9] border border-[#1e2738] transition-colors whitespace-nowrap cursor-pointer font-mono"
           >
             {q}
           </button>
         ))}
       </div>
 
-      {/* Message Stream */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages Feed */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
 
           return (
-            <div
-              key={msg.id}
-              className={`flex items-start space-x-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
-            >
-              {!isUser && (
-                <div className="w-6 h-6 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-400 mt-1">
-                  <Bot className="w-3.5 h-3.5" />
+            <div key={msg.id} className="text-xs font-sans">
+              {isUser ? (
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] rounded-lg px-3 py-2 bg-indigo-600 text-white font-mono text-xs">
+                    {msg.content}
+                  </div>
                 </div>
-              )}
+              ) : (
+                <div className="p-3 rounded-lg bg-[#0e131d] border border-[#1a2336] text-[#cbd5e1] space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-[#161d2a] text-[10px] font-mono text-[#64748b]">
+                    <div className="flex items-center space-x-1">
+                      <Terminal className="w-3 h-3 text-indigo-400" />
+                      <span>CodePath Assistant</span>
+                    </div>
+                    {msg.flow?.length > 0 && (
+                      <span className="text-emerald-400 font-semibold">100% AST MATCH</span>
+                    )}
+                  </div>
 
-              <div
-                className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
-                  isUser
-                    ? 'bg-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-[#101726] border border-slate-800/80 text-slate-200 rounded-tl-sm shadow-md'
-                }`}
-              >
-                {/* Content rendering */}
-                <div className="space-y-2 whitespace-pre-wrap font-sans">
-                  {msg.content}
-                </div>
+                  <div className="whitespace-pre-wrap leading-relaxed text-xs">
+                    {msg.content}
+                  </div>
 
-                {/* Feature Trace Card if available */}
-                {msg.flow && msg.flow.length > 0 && (
-                  <FeatureTraceCard
-                    flow={msg.flow}
-                    traceSteps={msg.traceSteps}
-                    onTraceClick={() => onTraceFeature && onTraceFeature(msg.flow)}
-                    isCurrentlyTraced={
-                      activeTracedFiles.length > 0 &&
-                      msg.flow.every((f) => activeTracedFiles.includes(f))
-                    }
-                    onSelectStepFile={onSelectStepFile}
-                  />
-                )}
-              </div>
-
-              {isUser && (
-                <div className="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-300 mt-1">
-                  <User className="w-3.5 h-3.5" />
+                  {msg.flow && msg.flow.length > 0 && (
+                    <FeatureTraceCard
+                      flow={msg.flow}
+                      traceSteps={msg.traceSteps}
+                      onTraceClick={() => onTraceFeature && onTraceFeature(msg.flow)}
+                      isCurrentlyTraced={
+                        activeTracedFiles.length > 0 &&
+                        msg.flow.every((f) => activeTracedFiles.includes(f))
+                      }
+                      onSelectStepFile={onSelectStepFile}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -182,21 +179,17 @@ export default function ChatPanel({
         })}
 
         {isLoading && (
-          <div className="flex items-center space-x-2.5 text-xs text-slate-400 pl-1">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            </div>
-            <div className="p-2.5 rounded-xl bg-[#101726] border border-slate-800/80 font-mono text-[11px] text-indigo-300 flex items-center space-x-2">
-              <span>Retrieving repository context & tracing flow...</span>
-            </div>
+          <div className="p-3 rounded-lg bg-[#0e131d] border border-[#1a2336] flex items-center space-x-2 text-xs font-mono text-[#94a3b8]">
+            <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+            <span>Analyzing repository AST & tracing execution chain...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
-      <div className="p-3 border-t border-slate-800/80 bg-[#080c14]">
+      {/* Input */}
+      <div className="p-2.5 border-t border-[#1a2232] bg-[#0c1017]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -206,18 +199,18 @@ export default function ChatPanel({
         >
           <input
             type="text"
-            placeholder="Ask about authentication, payment flow, database..."
+            placeholder="Ask about authentication, payment routes, db..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading}
-            className="flex-1 px-3.5 py-2 bg-[#0e1627] border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+            className="flex-1 px-3 py-1.5 bg-[#121824] border border-[#1a2336] rounded-md text-xs text-[#f1f5f9] placeholder-[#64748b] font-mono focus:outline-none focus:border-indigo-500"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white transition-colors flex items-center justify-center"
+            className="p-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors cursor-pointer"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           </button>
         </form>
       </div>

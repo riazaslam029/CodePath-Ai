@@ -18,8 +18,8 @@ const nodeTypes = {
   codeFile: CustomNode
 };
 
-const NODE_WIDTH = 240;
-const NODE_HEIGHT = 120;
+const NODE_WIDTH = 230;
+const NODE_HEIGHT = 110;
 
 function getLayoutedElements(nodes, edges, direction = 'TB') {
   const dagreGraph = new dagre.graphlib.Graph();
@@ -27,10 +27,10 @@ function getLayoutedElements(nodes, edges, direction = 'TB') {
 
   dagreGraph.setGraph({
     rankdir: direction,
-    nodesep: 60,
-    ranksep: 90,
-    marginx: 40,
-    marginy: 40
+    nodesep: 50,
+    ranksep: 80,
+    marginx: 32,
+    marginy: 32
   });
 
   nodes.forEach((node) => {
@@ -77,13 +77,14 @@ function GraphView({
     if (tracedFiles && Array.isArray(tracedFiles)) {
       tracedFiles.forEach((fileId, index) => {
         map.set(fileId, index + 1);
-        // Also map basename for flexibility
         const base = fileId.split('/').pop();
         map.set(base, index + 1);
       });
     }
     return map;
   }, [tracedFiles]);
+
+  const hasActiveTrace = traceMap.size > 0;
 
   // Construct React Flow elements from graphData
   useEffect(() => {
@@ -106,12 +107,15 @@ function GraphView({
       })
       .map((node) => {
         const stepNum = traceMap.get(node.id) || traceMap.get(node.label) || null;
+        const isSubdued = hasActiveTrace && !stepNum;
+
         return {
           id: node.id,
           type: 'codeFile',
           data: {
             ...node,
-            traceStep: stepNum
+            traceStep: stepNum,
+            isSubdued
           },
           selected: node.id === selectedNodeId,
           position: { x: 0, y: 0 }
@@ -123,10 +127,11 @@ function GraphView({
     const rawEdges = (graphData.edges || [])
       .filter((e) => activeNodeIds.has(e.source) && activeNodeIds.has(e.target))
       .map((e, index) => {
-        const isTracedEdge =
-          traceMap.has(e.source) &&
-          traceMap.has(e.target) &&
-          traceMap.get(e.source) + 1 === traceMap.get(e.target);
+        const sourceStep = traceMap.get(e.source) || traceMap.get(e.source.split('/').pop());
+        const targetStep = traceMap.get(e.target) || traceMap.get(e.target.split('/').pop());
+        const isTracedEdge = sourceStep && targetStep && sourceStep < targetStep;
+
+        const isSubdued = hasActiveTrace && !isTracedEdge;
 
         return {
           id: `edge-${e.source}-${e.target}-${index}`,
@@ -134,29 +139,33 @@ function GraphView({
           target: e.target,
           type: 'smoothstep',
           animated: isTracedEdge,
-          label: isTracedEdge ? `Step ${traceMap.get(e.source)} ➔ ${traceMap.get(e.target)}` : (e.type === 'api_call' ? 'calls API' : undefined),
+          label: isTracedEdge
+            ? `Step ${sourceStep} ➔ ${targetStep}`
+            : e.type === 'api_call'
+            ? 'calls API'
+            : undefined,
           style: {
-            stroke: isTracedEdge ? '#818cf8' : '#334155',
-            strokeWidth: isTracedEdge ? 3 : 1.5,
-            opacity: isTracedEdge ? 1 : 0.65
+            stroke: isTracedEdge ? '#818cf8' : isSubdued ? '#151d2a' : '#232d42',
+            strokeWidth: isTracedEdge ? 2.5 : 1.2,
+            opacity: isTracedEdge ? 1 : isSubdued ? 0.2 : 0.7
           },
           labelStyle: {
             fill: '#c7d2fe',
             fontWeight: 600,
             fontSize: 10,
-            fontFamily: 'monospace'
+            fontFamily: 'ui-monospace, monospace'
           },
           labelBgStyle: {
-            fill: '#1e1b4b',
-            fillOpacity: 0.9,
+            fill: '#151b2a',
+            fillOpacity: 0.95,
             rx: 4,
             ry: 4
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isTracedEdge ? '#818cf8' : '#475569',
-            width: 14,
-            height: 14
+            color: isTracedEdge ? '#818cf8' : isSubdued ? '#151d2a' : '#334155',
+            width: 12,
+            height: 12
           }
         };
       });
@@ -174,7 +183,7 @@ function GraphView({
     setTimeout(() => {
       fitView({ padding: 0.2, duration: 400 });
     }, 50);
-  }, [graphData, selectedNodeId, traceMap, activeFilter, searchQuery, fitView, setNodes, setEdges]);
+  }, [graphData, selectedNodeId, traceMap, hasActiveTrace, activeFilter, searchQuery, fitView, setNodes, setEdges]);
 
   const handleNodeClick = useCallback(
     (_, node) => {
@@ -193,7 +202,7 @@ function GraphView({
   }, [fitView, onClearTrace]);
 
   return (
-    <div className="relative w-full h-full bg-[#080c14] select-none">
+    <div className="relative w-full h-full bg-[#090b10] select-none">
       <GraphControls
         onZoomIn={() => zoomIn({ duration: 250 })}
         onZoomOut={() => zoomOut({ duration: 250 })}
@@ -219,19 +228,19 @@ function GraphView({
         defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#1e293b" gap={24} size={1} />
-        <Controls showInteractive={false} className="!bottom-4 !left-4" />
+        <Background color="#161e2e" gap={20} size={1} />
+        <Controls showInteractive={false} className="!bottom-3.5 !left-3.5" />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.traceStep) return '#818cf8';
-            if (node.data?.type === 'component') return '#0ea5e9';
-            if (node.data?.type === 'api') return '#10b981';
-            if (node.data?.type === 'service') return '#6366f1';
-            if (node.data?.type === 'database') return '#f43f5e';
-            return '#475569';
+            if (node.data?.type === 'component') return '#38bdf8';
+            if (node.data?.type === 'api') return '#34d399';
+            if (node.data?.type === 'service') return '#818cf8';
+            if (node.data?.type === 'database') return '#f87171';
+            return '#232d42';
           }}
-          maskColor="rgba(8, 12, 20, 0.75)"
-          className="!bottom-4 !right-4 !bg-[#0d1424] !border !border-slate-800 !rounded-xl !overflow-hidden"
+          maskColor="rgba(9, 11, 16, 0.85)"
+          className="!bottom-3.5 !right-3.5 !bg-[#0c1017] !border !border-[#1e2738] !rounded-lg !overflow-hidden"
         />
       </ReactFlow>
     </div>

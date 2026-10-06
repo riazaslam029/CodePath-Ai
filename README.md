@@ -213,4 +213,4 @@ All 9 unit and integration tests pass:
 - [ ] Support for Go, Rust, and Java language parsers
 - [ ] Git commit diff overlay to highlight changed nodes in open Pull Requests
 - [ ] Vector database indexing for ultra-large multi-repository monorepos
-- [ ] Exportable architectural diagrams in Mermaid and SVG format
+- [ ] Exportable architectural diagrams in Mermaid & SVG format
